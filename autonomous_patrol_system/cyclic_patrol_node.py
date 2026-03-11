@@ -10,9 +10,6 @@ class CyclicPatrolNode(Node):
     def __init__(self):
         super().__init__('cyclic_patrol_node')
         
-        # CRITICAL: Declare use_sim_time parameter
-        self.declare_parameter('use_sim_time', True)
-        
         self.get_logger().info('Patrol node started with simulation time')
         
         # --- Configuration ---

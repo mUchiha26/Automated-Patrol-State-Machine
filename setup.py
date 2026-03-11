@@ -27,6 +27,11 @@ setup(
     entry_points={
         'console_scripts': [
             'cyclic_patrol = autonomous_patrol_system.cyclic_patrol_node:main',
+            'environment_monitor = autonomous_patrol_system.environment_monitor_node:main',
+            'evidence_capture = autonomous_patrol_system.evidence_capture_node:main',
+            'alert_dispatcher = autonomous_patrol_system.alert_dispatcher_node:main',
+            'cli_feedback = autonomous_patrol_system.cli_feedback_node:main',
+            'mission_controller = autonomous_patrol_system.mission_controller_node:main',
         ],
     },
 )

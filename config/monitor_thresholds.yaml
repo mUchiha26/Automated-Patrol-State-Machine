@@ -1,0 +1,6 @@
+environment_monitor_node:
+  ros__parameters:
+    min_distance_threshold: 0.3
+    anomaly_duration_threshold: 1.0
+    scan_topic: "/scan"
+    use_sim_time: true

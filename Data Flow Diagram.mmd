@@ -1,0 +1,57 @@
+flowchart TD
+    %% Node Styles
+    classDef node fill:#e3f2fd,stroke:#1976d2,stroke-width:2px,rx:8;
+    classDef external fill:#f3e5f5,stroke:#7b1fa2,stroke-dasharray:3,rx:8;
+
+    %% Nodes
+    ROBOT[🤖 Gazebo / Robot]:::external
+    EM[🟢 environment_monitor]:::node
+    EC[🟡 evidence_capture]:::node
+    AD[🟡 alert_dispatcher]:::node
+    MC[🟡 mission_controller]:::node
+    CF[🟡 cli_feedback]:::node
+    CP[🟢 cyclic_patrol]:::node
+    HUMAN[👤 Human Operator]:::external
+    FS[📁 File System]:::external
+    EXT[🌐 External Systems]:::external
+
+    %% Topic Arrows (Blue, dashed) - Async pub/sub
+    ROBOT -.->|/scan| EM
+    EM -.->|/anomaly/detected| EC
+    EM -.->|/anomaly/detected| AD
+    EM -.->|/anomaly/detected| MC
+    AD -.->|/patrol/alerts| CF
+    AD -.->|/patrol/alerts| MC
+    AD -.->|/patrol/alerts| EXT
+    MC -.->|/mission/status| CF
+
+    %% Service Arrows (Green, solid) - Sync req/resp
+    MC <-->|save_evidence| EC
+    HUMAN <-->|resume_patrol| MC
+
+    %% Topic/Trigger Arrows (Orange, dotted) - External triggers
+    HUMAN -.->|/mission/resume_trigger| CP
+    MC <-->|coordinate| CP
+    CP <-->|nav goals| ROBOT
+
+    %% File I/O
+    EC -->|write logs| FS
+
+    %% Legend
+    subgraph Legend ["🔑 Communication Key"]
+        direction TB
+        L1["🔵 Topic<br/>Async pub/sub<br/>(dashed line)"]:::topicLegend
+        L2["🟢 Service<br/>Sync request/response<br/>(solid line)"]:::serviceLegend
+        L3["🟠 Action/Trigger<br/>Commands or goals<br/>(dotted line)"]:::actionLegend
+    end
+
+    %% Legend Styles
+    classDef topicLegend fill:#e3f2fd,stroke:#1976d2,stroke-width:3px,stroke-dasharray:5;
+    classDef serviceLegend fill:#e8f5e9,stroke:#388e3c,stroke-width:3px;
+    classDef actionLegend fill:#fff3e0,stroke:#ff9800,stroke-width:3px,stroke-dasharray:2;
+
+    %% Link Colors (match legend)
+    %% Link index order starts at 0, based on arrow declaration sequence above.
+    linkStyle 0,1,2,3,4,5,6,7 stroke:blue;
+    linkStyle 8,9 stroke:green;
+    linkStyle 10,11,12 stroke:orange;

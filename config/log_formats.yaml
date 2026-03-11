@@ -1,0 +1,5 @@
+cli_feedback_node:
+  ros__parameters:
+    verbosity: "info"
+    use_colors: true
+    use_sim_time: true

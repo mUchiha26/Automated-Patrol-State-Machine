@@ -1,0 +1,5 @@
+alert_dispatcher_node:
+  ros__parameters:
+    alert_topic: "/patrol/alerts"
+    enable_external_forwarding: false
+    use_sim_time: true

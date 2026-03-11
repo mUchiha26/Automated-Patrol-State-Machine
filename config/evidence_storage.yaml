@@ -1,0 +1,6 @@
+evidence_capture_node:
+  ros__parameters:
+    storage_path: "/tmp/patrol_evidence"
+    image_topic: "/camera/image_raw"
+    retain_days: 7
+    use_sim_time: true

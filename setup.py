@@ -12,9 +12,17 @@ setup(
         ('share/' + package_name, ['package.xml']),
         ('share/' + package_name + '/launch', [
             'launch/cyclic_patrol.launch.py',
+            'launch/environment_monitor.launch.py',
+            'launch/evidence_capture.launch.py',
+            'launch/full_system.launch.py',
         ]),
         ('share/' + package_name + '/config', [
             'config/waypoints.yaml',
+            'config/monitor_thresholds.yaml',
+            'config/evidence_storage.yaml',
+            'config/alert_channels.yaml',
+            'config/log_formats.yaml',
+            'config/mission_params.yaml',
         ]),
     ],
     install_requires=['setuptools'],

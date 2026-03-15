@@ -12,9 +12,10 @@ class MissionControllerNode(Node):
         # --- Parameters ---
         self.declare_parameter('task_timeout', 30.0)
         self.declare_parameter('max_retries', 3)
+        self.declare_parameter('initial_state', 'PATROLLING')
 
         # --- State Machine ---
-        self.mission_state = 'IDLE'  # IDLE, PATROLLING, ANOMALY_HANDLING, RECOVERING
+        self.mission_state = self.get_parameter('initial_state').value
         self.current_task = None
         self.retry_count = 0
         self.task_start_time = None
@@ -29,7 +30,7 @@ class MissionControllerNode(Node):
 
         # Publish initial status
         self._publish_status()
-        self.get_logger().info('Mission Controller initialized')
+        self.get_logger().info(f'Mission Controller initialized in state: {self.mission_state}')
 
     def alert_callback(self, msg: AlertMessage):
         """Handle incoming alerts: pause patrol, trigger evidence capture."""

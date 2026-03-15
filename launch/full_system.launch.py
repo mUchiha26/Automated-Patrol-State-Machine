@@ -14,7 +14,12 @@ def generate_launch_description():
     
     return LaunchDescription([
         # 1. Patrol
-        Node(package='autonomous_patrol_system', executable='cyclic_patrol', parameters=[waypoints_config]),
+        Node(
+            package='autonomous_patrol_system',
+            executable='cyclic_patrol',
+            name='cyclic_patrol_node',
+            parameters=[waypoints_config],
+        ),
         # 2. Monitor
         Node(package='autonomous_patrol_system', executable='environment_monitor', parameters=[monitor_config]),
         # 3. Evidence

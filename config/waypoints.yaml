@@ -1,4 +1,4 @@
-autonomous_patrol_system:
+cyclic_patrol_node:
   ros__parameters:
     use_sim_time: true
     total_cycles: 3

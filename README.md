@@ -17,14 +17,14 @@ This repository contains **custom ROS 2 nodes** that extend the official TurtleB
 
 ## ✨ Key Features
 
-| Feature | Description |
-| --- | --- |
-| 🔄 **Cyclic Patrol** | Navigate between 3-4+ waypoints in configurable loops |
+| Feature                    | Description                                              |
+| -------------------------- | -------------------------------------------------------- |
+| 🔄 **Cyclic Patrol**       | Navigate between 3-4+ waypoints in configurable loops    |
 | 🎯 **Waypoint Navigation** | Precise goal posing with orientation control (x, y, yaw) |
-| ⚙️ **Nav2 Integration** | Built on official `NavigateToPose` action client |
-| 🕐 **Simulation Ready** | Full support for Ignition Gazebo with `use_sim_time` |
-| 🧩 **Extensible Design** | Modular node structure for adding custom behaviors |
-| 📝 **Structured Logging** | Console feedback for mission progress and debugging |
+| ⚙️ **Nav2 Integration**    | Built on official `NavigateToPose` action client         |
+| 🕐 **Simulation Ready**    | Full support for Ignition Gazebo with `use_sim_time`     |
+| 🧩 **Extensible Design**   | Modular node structure for adding custom behaviors       |
+| 📝 **Structured Logging**  | Console feedback for mission progress and debugging      |
 
 ---
 
@@ -109,7 +109,7 @@ source install/setup.bash
 
 ```bash
 # Terminal 1: Ignition Simulation
-ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py
+ros2 launch turtlebot4_ignition_bringup turtlebot4_ignition.launch.py world:=maze
 
 # Terminal 2: Navigation (with your map)
 ros2 launch turtlebot4_navigation nav2.launch.py \
@@ -157,12 +157,12 @@ The `cyclic_patrol_node` implements autonomous cyclic waypoint navigation using 
 
 ### Parameters
 
-| Parameter | Type | Default | Description |
-| --- | --- | --- | --- |
-| `use_sim_time` | `bool` | `true` | Use simulation clock (required for Gazebo) |
-| `total_cycles` | `int` | `3` | Number of complete patrol loops to execute |
-| `waypoints` | `list[list]` | See below | List of `[x, y, yaw_degrees]` coordinates |
-| `waypoint_timeout` | `float` | `30.0` | Seconds to wait for navigation completion |
+| Parameter          | Type         | Default   | Description                                |
+| ------------------ | ------------ | --------- | ------------------------------------------ |
+| `use_sim_time`     | `bool`       | `true`    | Use simulation clock (required for Gazebo) |
+| `total_cycles`     | `int`        | `3`       | Number of complete patrol loops to execute |
+| `waypoints`        | `list[list]` | See below | List of `[x, y, yaw_degrees]` coordinates  |
+| `waypoint_timeout` | `float`      | `30.0`    | Seconds to wait for navigation completion  |
 
 ### Example waypoint configuration (Python)
 
@@ -178,11 +178,11 @@ self.waypoints = [
 
 ### Topics & actions
 
-| Interface | Type | Direction | Purpose |
-| --- | --- | --- | --- |
-| `/navigate_to_pose` | `nav2_msgs/action/NavigateToPose` | Client → Server | Send navigation goals |
-| `/odom` | `nav_msgs/Odometry` | Subscribe | Monitor robot position (optional) |
-| `/tf` | `tf2_msgs/TFMessage` | Subscribe | Transform handling (internal) |
+| Interface           | Type                              | Direction       | Purpose                           |
+| ------------------- | --------------------------------- | --------------- | --------------------------------- |
+| `/navigate_to_pose` | `nav2_msgs/action/NavigateToPose` | Client → Server | Send navigation goals             |
+| `/odom`             | `nav_msgs/Odometry`               | Subscribe       | Monitor robot position (optional) |
+| `/tf`               | `tf2_msgs/TFMessage`              | Subscribe       | Transform handling (internal)     |
 
 ### Console output example
 
@@ -205,13 +205,13 @@ self.waypoints = [
 
 This package is designed as a **foundation** for advanced autonomous behaviors.
 
-| Node | Status | Purpose |
-| --- | --- | --- |
-| `cyclic_patrol_node.py` | ✅ Implemented | Basic cyclic waypoint navigation |
-| `anomaly_detector_node.py` | 🔜 Planned | Monitor LiDAR/camera for unexpected objects |
-| `evidence_capture_node.py` | 🔜 Planned | Auto-record images/logs when anomaly detected |
-| `alert_dispatcher_node.py` | 🔜 Planned | Publish alerts to ROS topics/services |
-| `patrol_bt_loader.py` | 🔜 Planned | Load Behavior Tree XML for complex missions |
+| Node                       | Status         | Purpose                                       |
+| -------------------------- | -------------- | --------------------------------------------- |
+| `cyclic_patrol_node.py`    | ✅ Implemented | Basic cyclic waypoint navigation              |
+| `anomaly_detector_node.py` | 🔜 Planned     | Monitor LiDAR/camera for unexpected objects   |
+| `evidence_capture_node.py` | 🔜 Planned     | Auto-record images/logs when anomaly detected |
+| `alert_dispatcher_node.py` | 🔜 Planned     | Publish alerts to ROS topics/services         |
+| `patrol_bt_loader.py`      | 🔜 Planned     | Load Behavior Tree XML for complex missions   |
 
 ### Future architecture vision
 
@@ -313,44 +313,16 @@ def generate_launch_description():
 
 ## 🧪 Testing
 
-### Unit tests (skeleton)
+Runtime and integration testing are documented in:
 
-The `test/` directory contains auto-generated test scaffolding. Extend with:
+- `docs/TESTING_GUIDE.md`
 
-```python
-# test/test_cyclic_patrol.py
-import unittest
-import rclpy
-from autonomous_patrol_system.cyclic_patrol_node import CyclicPatrolNode
+The testing guide includes:
 
-class TestCyclicPatrolNode(unittest.TestCase):
-    def setUp(self):
-        rclpy.init()
-        self.node = CyclicPatrolNode()
-
-    def tearDown(self):
-        self.node.destroy_node()
-        rclpy.shutdown()
-
-    def test_waypoint_initialization(self):
-        self.assertIsNotNone(self.node.waypoints)
-```
-
-Run tests with:
-
-```bash
-colcon test --packages-select autonomous_patrol_system
-colcon test-result --verbose
-```
-
-### Integration testing
-
-1. Launch simulation + Nav2
-2. Run your node
-3. Verify in RViz:
-   - Robot follows planned path (green line)
-   - Waypoints are reached in order
-   - Cycles complete as configured
+- End-to-end simulation and Nav2 bringup flow
+- Launch-file test procedures (`cyclic_patrol`, `environment_monitor`, `evidence_capture`, `full_system`)
+- Config tuning experiments and expected behavior
+- A Nav2-focused troubleshooting section
 
 ---
 

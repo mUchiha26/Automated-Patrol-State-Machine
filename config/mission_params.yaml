@@ -1,5 +1,6 @@
 mission_controller_node:
   ros__parameters:
+    initial_state: "PATROLLING"
     task_timeout: 30.0
     max_retries: 3
     use_sim_time: true

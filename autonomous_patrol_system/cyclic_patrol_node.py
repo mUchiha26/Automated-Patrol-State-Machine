@@ -17,15 +17,14 @@ class CyclicPatrolNode(Node):
         super().__init__('cyclic_patrol_node')
 
         # --- Parameters ---
-        self.declare_parameter('use_sim_time', True)
         self.declare_parameter('total_cycles', 3)
         self.declare_parameter(
             'waypoints',
             [
-                [0.0, 0.0, 0.0],
-                [2.0, 0.0, 90.0],
-                [2.0, 2.0, 180.0],
-                [0.0, 2.0, 270.0],
+                0.0, 0.0, 0.0,
+                2.0, 0.0, 90.0,
+                2.0, 2.0, 180.0,
+                0.0, 2.0, 270.0,
             ],
         )
         self.declare_parameter('waypoint_timeout', 30.0)
@@ -68,6 +67,18 @@ class CyclicPatrolNode(Node):
         if not isinstance(raw_waypoints, list) or not raw_waypoints:
             raise ValueError('Parameter "waypoints" must be a non-empty list')
 
+        # ROS 2 parameters do not support list-of-list values reliably.
+        # Accept flat triples [x1, y1, yaw1, x2, y2, yaw2, ...].
+        if all(not isinstance(item, list) for item in raw_waypoints):
+            if len(raw_waypoints) % 3 != 0:
+                raise ValueError('Flat "waypoints" list length must be a multiple of 3')
+
+            validated = []
+            for idx in range(0, len(raw_waypoints), 3):
+                x, y, yaw = raw_waypoints[idx:idx + 3]
+                validated.append([float(x), float(y), float(yaw)])
+            return validated
+
         validated = []
         for idx, wp in enumerate(raw_waypoints, start=1):
             if not isinstance(wp, list) or len(wp) != 3:
@@ -77,20 +88,15 @@ class CyclicPatrolNode(Node):
         return validated
 
     def _wait_for_nav2_readiness(self, timeout_sec):
-        """Wait until Nav2 action server and map->base_link TF are available."""
-        self.get_logger().info('Waiting for Nav2 action server and map->base_link transform...')
+        """Wait until Nav2 action server is available; check TF as advisory."""
+        self.get_logger().info('Waiting for Nav2 action server...')
         deadline = self.get_clock().now() + Duration(seconds=timeout_sec)
 
         while rclpy.ok() and self.get_clock().now() < deadline:
             action_ready = self._action_client.wait_for_server(timeout_sec=0.5)
-            tf_ready = self._tf_buffer.can_transform(
-                'map',
-                'base_link',
-                Time(),
-                timeout=Duration(seconds=0.1),
-            )
 
-            if action_ready and tf_ready:
+            if action_ready:
+                self._warn_if_tf_not_ready()
                 return
 
             # Keep processing subscriptions while waiting.
@@ -98,13 +104,43 @@ class CyclicPatrolNode(Node):
 
         raise RuntimeError(
             (
-                'Timed out waiting for Nav2 readiness. Missing action server or map->base_link TF. '
-                'Set initial pose in RViz or publish /initialpose, then relaunch.'
+                'Timed out waiting for Nav2 action server. '
+                'Ensure turtlebot4_navigation is running, then relaunch.'
             )
         )
 
+    def _warn_if_tf_not_ready(self):
+        """Warn if map->base_link is not currently resolvable."""
+        try:
+            tf_ok, tf_debug = self._tf_buffer.can_transform(
+                'map',
+                'base_link',
+                Time(),
+                timeout=Duration(seconds=0.1),
+                return_debug_tuple=True,
+            )
+            if not tf_ok:
+                self.get_logger().warn(
+                    (
+                        'Nav2 action server is ready but map->base_link is not yet '
+                        f'resolvable ({tf_debug}). Set initial pose if needed.'
+                    )
+                )
+        except TypeError:
+            tf_ok = self._tf_buffer.can_transform(
+                'map',
+                'base_link',
+                Time(),
+                timeout=Duration(seconds=0.1),
+            )
+            if not tf_ok:
+                self.get_logger().warn(
+                    'Nav2 action server is ready but map->base_link is not yet '
+                    'resolvable. Set initial pose if needed.'
+                )
+
     def get_pose_stamped(self, x, y, yaw_deg):
-        """Helper to create a PoseStamped message with correct orientation."""
+        """Create a PoseStamped message with correct orientation."""
         pose = PoseStamped()
         pose.header.frame_id = 'map'
         pose.header.stamp = self.get_clock().now().to_msg()
@@ -124,8 +160,7 @@ class CyclicPatrolNode(Node):
         return pose
 
     def send_next_goal(self):
-        """Sends the next waypoint goal to Nav2."""
-
+        """Send the next waypoint goal to Nav2."""
         # Check if mission is complete
         if self.current_cycle >= self.total_cycles:
             self.get_logger().info('*** PATROL MISSION COMPLETE ***')
@@ -140,14 +175,19 @@ class CyclicPatrolNode(Node):
         goal_msg = NavigateToPose.Goal()
         goal_msg.pose = goal_pose
 
-        self.get_logger().info(f'Sending Goal: Cycle {self.current_cycle + 1}/{self.total_cycles}, Waypoint {self.current_waypoint_index + 1}')
+        self.get_logger().info(
+            (
+                f'Sending Goal: Cycle {self.current_cycle + 1}/{self.total_cycles}, '
+                f'Waypoint {self.current_waypoint_index + 1}'
+            )
+        )
 
         # Send goal asynchronously
         send_goal_future = self._action_client.send_goal_async(goal_msg)
         send_goal_future.add_done_callback(self.goal_response_callback)
 
     def goal_response_callback(self, future):
-        """Handles the response when a goal is accepted/rejected."""
+        """Handle the response when a goal is accepted or rejected."""
         goal_handle = future.result()
         if not goal_handle.accepted:
             self.get_logger().error('Goal rejected by Nav2')
@@ -160,13 +200,15 @@ class CyclicPatrolNode(Node):
         get_result_future.add_done_callback(self.get_result_callback)
 
     def get_result_callback(self, future):
-        """Handles the result when the robot arrives at the waypoint."""
+        """Handle the result when the robot arrives at the waypoint."""
         nav_result = future.result()
         status = nav_result.status
 
         # GoalStatus.STATUS_SUCCEEDED is the canonical successful action status.
         if status == GoalStatus.STATUS_SUCCEEDED:
-            self.get_logger().info(f'Waypoint {self.current_waypoint_index + 1} Reached Successfully.')
+            self.get_logger().info(
+                f'Waypoint {self.current_waypoint_index + 1} Reached Successfully.'
+            )
 
             # Move to next waypoint
             self.current_waypoint_index += 1

@@ -13,13 +13,23 @@
 # limitations under the License.
 
 from ament_flake8.main import main_with_errors
+from pathlib import Path
 import pytest
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.mark.flake8
 @pytest.mark.linter
 def test_flake8():
-    rc, errors = main_with_errors(argv=[])
+    rc, errors = main_with_errors(
+        argv=[
+            str(ROOT / 'autonomous_patrol_system'),
+            str(ROOT / 'launch'),
+            str(ROOT / 'test'),
+        ]
+    )
     assert rc == 0, \
         'Found %d code style errors / warnings:\n' % len(errors) + \
         '\n'.join(errors)

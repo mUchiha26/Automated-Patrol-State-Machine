@@ -52,11 +52,19 @@ class CLIFeedbackNode(Node):
             print(f"{prefix} {message}", flush=True)
 
     def alert_callback(self, msg: AlertMessage):
-        color = Colors.FAIL if msg.severity == 1 else Colors.WARNING if msg.severity == 2 else Colors.OKCYAN
+        color = (
+            Colors.FAIL
+            if msg.severity == 1
+            else Colors.WARNING if msg.severity == 2 else Colors.OKCYAN
+        )
         self._print('warn', f"ALERT {msg.message} (src:{msg.source_node})", color)
 
     def anomaly_callback(self, msg: AnomalyEvent):
-        self._print('info', f"ANOMALY {msg.anomaly_type} @ {msg.detected_distance:.2f}m", Colors.OKBLUE)
+        self._print(
+            'info',
+            f"ANOMALY {msg.anomaly_type} @ {msg.detected_distance:.2f}m",
+            Colors.OKBLUE,
+        )
 
     def status_callback(self, msg: String):
         self._print('info', f"STATUS {msg.data}", Colors.OKGREEN)

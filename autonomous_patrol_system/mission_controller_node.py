@@ -22,11 +22,17 @@ class MissionControllerNode(Node):
 
         # --- Publishers/Subscribers ---
         self.status_pub = self.create_publisher(MissionStatus, '/mission/status', 10)
-        self.alert_sub = self.create_subscription(AlertMessage, '/patrol/alerts', self.alert_callback, 10)
-        self.resume_sub = self.create_subscription(Bool, '/mission/resume_trigger', self.resume_callback, 10)
+        self.alert_sub = self.create_subscription(
+            AlertMessage, '/patrol/alerts', self.alert_callback, 10
+        )
+        self.resume_sub = self.create_subscription(
+            Bool, '/mission/resume_trigger', self.resume_callback, 10
+        )
 
         # --- Service ---
-        self.resume_srv = self.create_service(ResumePatrol, 'resume_patrol', self.resume_service_callback)
+        self.resume_srv = self.create_service(
+            ResumePatrol, 'resume_patrol', self.resume_service_callback
+        )
 
         # Publish initial status
         self._publish_status()

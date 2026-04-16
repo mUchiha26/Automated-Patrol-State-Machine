@@ -1,0 +1,4 @@
+patrol:
+  speed: 0.2
+  update_rate: 10
+  obstacle_threshold: 0.5
